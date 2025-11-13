@@ -6,139 +6,41 @@
   <title>Advanced Climate Engine (ACE) - Complete</title>
   
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  
   <!-- ACE Analysis Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0"></script>
   <script src="https://cdn.plot.ly/plotly-2.18.0.min.js"></script>
   
+  
   <script>
-    // Firebase configuration for klimakoiq.com
-    const firebaseConfig = {
-      apiKey: "AIzaSyDCPLODfmk0K9N3pLp9p2fb7humG2smuGY",
-      authDomain: "klimakoiq.firebaseapp.com",
-      projectId: "klimakoiq",
-      storageBucket: "klimakoiq.firebasestorage.app",
-      messagingSenderId: "752191906651",
-      appId: "1:752191906651:web:b9c8f74fcdb5da5f73f07e",
-      measurementId: "G-Y5CDVM876W"
-    };
-
-    // Initialize Firebase
-    let currentUser = null;
-    
-    // Define authentication functions first
-    function showMainApp() {
-      const authOverlay = document.getElementById('authOverlay');
-      const mainApp = document.getElementById('mainApp');
-      
-      if (authOverlay) {
-        authOverlay.classList.add('hidden');
-        authOverlay.style.display = 'none';
-      }
-      
-      if (mainApp) {
-        mainApp.style.display = 'block';
-        mainApp.style.visibility = 'visible';
-      }
-      
-      if (currentUser) {
+    // ACE Local Mode (no login required)
+    (function(){
+      function showMainAppLocal(){
+        const authOverlay = document.getElementById('authOverlay');
+        if (authOverlay) { authOverlay.remove(); }
+        const mainApp = document.getElementById('mainApp');
+        if (mainApp) {
+          mainApp.style.display = 'block';
+          mainApp.style.visibility = 'visible';
+        }
         const userWelcome = document.getElementById('userWelcome');
-        if (userWelcome) {
-          userWelcome.textContent = `Welcome, ${currentUser.email}!`;
-        }
+        if (userWelcome) userWelcome.textContent = 'Local mode';
       }
-    }
-
-    function showAuthOverlay() {
-      const authOverlay = document.getElementById('authOverlay');
-      const mainApp = document.getElementById('mainApp');
-      
-      console.log('showAuthOverlay called');
-      
-      if (authOverlay) {
-        authOverlay.classList.remove('hidden');
-        authOverlay.style.display = 'flex';
-        console.log('Auth overlay shown');
+      // Stub any global functions the UI might call
+      window.handleLogout = function(){ /* no-op in local mode */ };
+      window.createUserWithEmailAndPassword = function(){ /* no-op */ };
+      window.signInWithEmailAndPassword = function(){ /* no-op */ };
+      window.signOut = function(){ /* no-op */ };
+      // Ensure app is visible as soon as the DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showMainAppLocal);
+      } else {
+        showMainAppLocal();
       }
-      
-      if (mainApp) {
-        mainApp.style.display = 'none';
-        mainApp.style.visibility = 'hidden';
-        console.log('Main app hidden');
-      }
-    }
-    
-    // Skip forcing auth overlay since users come from login page
-    // setTimeout(() => {
-    //   console.log('Forcing auth overlay display');
-    //   showAuthOverlay();
-    // }, 100);
-    
-    // Wait for Firebase SDK to load before initializing
-    function initializeFirebase() {
-      try {
-        // Check if Firebase SDK is loaded
-        if (typeof firebase === 'undefined') {
-          console.error('Firebase SDK not loaded');
-          setTimeout(initializeFirebase, 100);
-          return;
-        }
-        
-        console.log('Firebase SDK loaded, initializing...');
-        firebase.initializeApp(firebaseConfig);
-        
-        // Ensure Firebase Auth is properly set
-        window.firebaseAuth = firebase.auth();
-        
-        // Double-check initialization
-        if (!window.firebaseAuth) {
-          console.error('Failed to initialize Firebase Auth');
-          throw new Error('Firebase Auth initialization failed');
-        }
-        
-        console.log('Firebase Auth initialized:', !!window.firebaseAuth);
-        
-        // Fix Firebase auth function binding
-        window.createUserWithEmailAndPassword = function(auth, email, password) {
-          return firebase.auth().createUserWithEmailAndPassword(email, password);
-        };
-        window.signInWithEmailAndPassword = function(auth, email, password) {
-          return firebase.auth().signInWithEmailAndPassword(email, password);
-        };
-        window.signOut = function(auth) {
-          return firebase.auth().signOut();
-        };
-
-        // Authentication state listener
-        firebase.auth().onAuthStateChanged(function(user) {
-          currentUser = user;
-          if (user) {
-            console.log('User authenticated:', user.email);
-            setTimeout(() => showMainApp(), 500);
-          } else {
-            console.log('User not authenticated');
-            showAuthOverlay();
-          }
-        });
-        
-        console.log('Firebase initialized successfully');
-      } catch (error) {
-        console.error('Firebase initialization error:', error);
-        showAuthOverlay();
-      }
-    }
-    
-    // Initialize Firebase when DOM is loaded
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeFirebase);
-    } else {
-      initializeFirebase();
-    }
+    })();
   </script>
+
   <style>
     :root {
       --primary: #0070f3;
@@ -1773,15 +1675,7 @@
 </head>
 <body>
   <!-- Firebase Authentication Overlay -->
-  <div id="authOverlay">
-    <div class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <h1>🌍 Advanced Climate Engine</h1>
-          <p>Professional EPW Climate Analysis Platform</p>
-        </div>
-        
-        <div class="auth-form">
+  <div class="auth-form">
           <div class="form-toggle">
             <button id="loginTab" class="active" onclick="showLogin()">Sign In</button>
             <button id="signupTab" onclick="showSignup()">Sign Up</button>
@@ -1808,7 +1702,7 @@
   </div>
 
   <!-- Main ACE Application (hidden by default) -->
-  <div id="mainApp" class="container" style="display: none; visibility: hidden;">
+  <div id="mainApp" class="container" style="display:block; visibility:visible;" >
     <header>
       <div class="header-content">
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
